@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Menu
@@ -212,7 +214,7 @@ private fun FilterChipsRow(
     Row(
         Modifier
             .fillMaxWidth()
-            .horizontalScrollCompat(),
+            .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -225,11 +227,3 @@ private fun FilterChipsRow(
         }
     }
 }
-
-@Composable
-private fun Modifier.horizontalScrollCompat(): Modifier =
-    this.then(
-        androidx.compose.foundation.horizontalScroll(
-            androidx.compose.foundation.rememberScrollState(),
-        ),
-    )
