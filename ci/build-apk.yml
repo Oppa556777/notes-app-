@@ -6,9 +6,13 @@ on:
       - "**"
   workflow_dispatch:
 
+# Required so the job can publish the APK as a Release asset.
+permissions:
+  contents: write
+
 jobs:
   build:
-    name: Assemble debug + release APKs
+    name: Assemble + publish signed APK
     runs-on: ubuntu-latest
 
     steps:
@@ -45,25 +49,46 @@ jobs:
           EOF
 
       - name: Build debug APK
-        run: ./gradlew --no-daemon assembleDebug
+        run: ./gradlew --no-daemon --stacktrace assembleDebug
 
       - name: Build release APK
-        run: ./gradlew --no-daemon assembleRelease
+        run: ./gradlew --no-daemon --stacktrace assembleRelease
 
-      - name: Show outputs
+      - name: Rename + verify APKs
+        id: apks
         run: |
-          find app/build/outputs/apk -name "*.apk" -print -exec ls -lh {} \;
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk dist/SecureNotes-release.apk
+          cp app/build/outputs/apk/debug/app-debug.apk     dist/SecureNotes-debug.apk
 
-      - name: Upload debug APK
+          # Confirm the release APK really is signed.
+          BUILD_TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BUILD_TOOLS/apksigner" verify --verbose dist/SecureNotes-release.apk
+
+          ls -lh dist/
+          echo "tag=v1.0.0-build${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifacts (fallback download)
         uses: actions/upload-artifact@v4
         with:
-          name: SecureNotes-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: SecureNotes-APKs
+          path: dist/*.apk
           if-no-files-found: error
 
-      - name: Upload release APK
-        uses: actions/upload-artifact@v4
+      # Publishes a Release so the APK gets a permanent, direct download URL
+      # that anyone can open on their phone without signing in to GitHub.
+      - name: Publish GitHub Release with APK
+        uses: softprops/action-gh-release@v2
         with:
-          name: SecureNotes-release-apk
-          path: app/build/outputs/apk/release/*.apk
-          if-no-files-found: error
+          tag_name: ${{ steps.apks.outputs.tag }}
+          name: SecureNotes ${{ steps.apks.outputs.tag }}
+          body: |
+            📒 **SecureNotes** — privacy-first encrypted notes for Android.
+
+            **Install:** download `SecureNotes-release.apk` below on your phone and open it.
+            You may need to allow "Install unknown apps" for your browser.
+
+            - Requires Android 8.0 (API 26) or newer
+            - Signed with a generated release key
+          files: dist/*.apk
+          fail_on_unmatched_files: true
