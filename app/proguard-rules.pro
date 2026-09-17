@@ -1,0 +1,5 @@
+-keepattributes *Annotation*, Signature, InnerClasses, EnclosingMethod
+-keep class net.sqlcipher.** { *; }
+-keep class net.sqlcipher.database.** { *; }
+-dontwarn org.jsoup.**
+-dontwarn okhttp3.**

@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">SecureNotes</string>
+    <string name="vault_title">Private Vault</string>
+</resources>
