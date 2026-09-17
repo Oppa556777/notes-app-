@@ -121,12 +121,37 @@ keyPassword=<KEY_PASSWORD>
 
 `keystore.properties` and `*.jks` are gitignored — never commit them.
 
-### 🤖 Building the APK in CI
+### ⚡ One-command build (recommended)
 
-`.github/workflows/build-apk.yml` builds both APKs on every push and on manual dispatch,
-generating a keystore on the fly and uploading `app-debug.apk` / `app-release.apk` as
-workflow artifacts. Run it from the **Actions** tab → *Build APK* → *Run workflow*, then
-download the artifacts when it finishes.
+```bash
+./build-apk.sh
+```
+
+This locates your Android SDK, generates a release keystore if you don't have one, writes
+`keystore.properties`, and builds both APKs. Then install:
+
+```bash
+adb install -r app/build/outputs/apk/release/app-release.apk
+```
+
+### 🤖 Building the APK in CI (GitHub Actions)
+
+A ready-to-use workflow lives at **`ci/build-apk.yml`**. It builds both APKs, generates a
+keystore on the fly, and uploads them as downloadable artifacts.
+
+> ⚠️ It is stored under `ci/` rather than `.github/workflows/` because the bot account that
+> created this branch lacks the GitHub `workflows` permission. **To enable it, move the file
+> and push** (one command, from your own account):
+>
+> ```bash
+> mkdir -p .github/workflows
+> git mv ci/build-apk.yml .github/workflows/build-apk.yml
+> git commit -m "ci: enable APK build workflow"
+> git push
+> ```
+>
+> Then go to the **Actions** tab → *Build APK* → *Run workflow*, and download the
+> `SecureNotes-release-apk` artifact when it finishes.
 
 ---
 
