@@ -77,24 +77,61 @@ Hilt for DI · Coroutines + Flow throughout · Room · DataStore · Navigation C
 
 ---
 
-## 🛠️ Build & run
+## 📲 Get the APK
 
-**Requirements:** JDK 17, Android SDK 35, internet access for Gradle/Maven.
+### Option A — build it in the cloud (no Android SDK needed) ⭐
+
+Run this once from your own account:
 
 ```bash
-# Debug APK
-./gradlew assembleDebug
-# → app/build/outputs/apk/debug/app-debug.apk
-
-# Release APK (signed)
-./gradlew assembleRelease
-# → app/build/outputs/apk/release/app-release.apk
+./enable-ci-build.sh
 ```
 
-Or open the project in Android Studio (Ladybug or newer) and hit ▶.
+It moves the ready-made workflow into `.github/workflows/` and pushes. GitHub Actions then
+builds and signs the APK and **publishes it as a Release**, giving you a direct download link:
+
+```
+https://github.com/<you>/notes-app-/releases/latest
+```
+
+Open that on your phone and tap `SecureNotes-release.apk` to install.
+
+> **Why the extra step?** The bot account that created this branch lacks GitHub's `workflows`
+> permission, so it cannot push into `.github/workflows/` (the push is rejected server-side).
+> The workflow itself is complete and validated — it just has to be enabled from your account.
+> You can also do it by hand: `git mv ci/build-apk.yml .github/workflows/ && git commit && git push`.
+
+### Option B — build locally
+
+**Requirements:** JDK 17 and the Android SDK.
+
+```bash
+./build-apk.sh
+```
+
+Finds your SDK, generates a keystore, and builds both APKs:
+
+```
+app/build/outputs/apk/release/app-release.apk
+app/build/outputs/apk/debug/app-debug.apk
+```
+
+Install with `adb install -r app/build/outputs/apk/release/app-release.apk`.
+
+Plain Gradle also works:
+
+```bash
+./gradlew assembleDebug      # or assembleRelease
+```
+
+---
+
+## 🛠️ Build details
 
 - **minSdk 26** (Android 8.0) · **targetSdk / compileSdk 35** (Android 15)
-- Kotlin 2.0.20 · AGP 8.5.2 · Compose BOM 2024.09.03
+- Kotlin 2.0.20 · AGP 8.5.2 · Compose BOM 2024.09.03 · JDK 17
+
+Or open the project in Android Studio (Ladybug or newer) and hit ▶.
 
 ### 🔑 Signing a release APK
 
@@ -120,38 +157,6 @@ keyPassword=<KEY_PASSWORD>
 ```
 
 `keystore.properties` and `*.jks` are gitignored — never commit them.
-
-### ⚡ One-command build (recommended)
-
-```bash
-./build-apk.sh
-```
-
-This locates your Android SDK, generates a release keystore if you don't have one, writes
-`keystore.properties`, and builds both APKs. Then install:
-
-```bash
-adb install -r app/build/outputs/apk/release/app-release.apk
-```
-
-### 🤖 Building the APK in CI (GitHub Actions)
-
-A ready-to-use workflow lives at **`ci/build-apk.yml`**. It builds both APKs, generates a
-keystore on the fly, and uploads them as downloadable artifacts.
-
-> ⚠️ It is stored under `ci/` rather than `.github/workflows/` because the bot account that
-> created this branch lacks the GitHub `workflows` permission. **To enable it, move the file
-> and push** (one command, from your own account):
->
-> ```bash
-> mkdir -p .github/workflows
-> git mv ci/build-apk.yml .github/workflows/build-apk.yml
-> git commit -m "ci: enable APK build workflow"
-> git push
-> ```
->
-> Then go to the **Actions** tab → *Build APK* → *Run workflow*, and download the
-> `SecureNotes-release-apk` artifact when it finishes.
 
 ---
 
